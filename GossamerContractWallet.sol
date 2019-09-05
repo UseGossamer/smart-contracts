@@ -75,13 +75,13 @@ contract GossamerContractWallet is ReentrancyGuard {
   /// @notice Getter function for Dai address
   /// @return Dai token address
   function daiAddress() private pure returns (address) {
-    return 0x5592EC0cfb4dbc12D3aB100b257153436a1f0FEa;
+    return 0x89d24A6b4CcB1B6fAA2625fE562bDD9a23260359;
   }
 
   /// @notice Getter function for USDC address
   /// @return USDC token address
   function usdcAddress() private pure returns (address) {
-    return 0x4DBCdF9B62e891a7cec5A2568C3F4FAF9E8Abe2b;
+    return 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
   }
 
   /// @notice Returns address for the cToken contract corresponding to provided token address (either Dai or USDC)
@@ -89,11 +89,11 @@ contract GossamerContractWallet is ReentrancyGuard {
   /// @return cDAI or cUSDC cToken address
   function getCTokenAddress(address _tokenAddress) private pure returns (address) {
     if (_tokenAddress == daiAddress()) {
-      return 0x6D7F0754FFeb405d23C51CE938289d4835bE3b14;
+      return 0xF5DCe57282A584D2746FaF1593d3121Fcac444dC;
     }
 
     if (_tokenAddress == usdcAddress()) {
-      return 0x5B281A6DdA0B271e91ae35DE655Ad301C976edb1;
+      return 0x39AA39c021dfbaE8faC545936693aC917d5E7563;
     }
     revert('The token address provided is not supported by Gossamer at this time');
   }
