@@ -52,15 +52,43 @@ contract GossamerContractWallet is ReentrancyGuard {
   /// @param _adminAddress2 The Gossamer admim wallet that can call this contract's functions
   /// @param _adminAddress3 The Gossamer admim wallet that can call this contract's functions
   /// @param _adminAddress4 The Gossamer admim wallet that can call this contract's functions
+  /// @param _adminAddress5 The Gossamer admim wallet that can call this contract's functions
+  /// @param _adminAddress6 The Gossamer admim wallet that can call this contract's functions
+  /// @param _adminAddress7 The Gossamer admim wallet that can call this contract's functions
+  /// @param _adminAddress8 The Gossamer admim wallet that can call this contract's functions
+  /// @param _adminAddress9 The Gossamer admim wallet that can call this contract's functions
+  /// @param _adminAddress10 The Gossamer admim wallet that can call this contract's functions
   /// @param _userIdentifier1 Offchain user identifier
   /// @param _userIdentifier2 Offchain user identifier
   /// @param _userIdentifier3 Offchain user identifier
-  constructor(address _userAddress, address _adminAddress1, address _adminAddress2, address _adminAddress3, address _adminAddress4, string memory _userIdentifier1, string memory _userIdentifier2, string memory _userIdentifier3) public {
+  constructor(
+    address _userAddress,
+    address _adminAddress1,
+    address _adminAddress2,
+    address _adminAddress3,
+    address _adminAddress4,
+    address _adminAddress5,
+    address _adminAddress6,
+    address _adminAddress7,
+    address _adminAddress8,
+    address _adminAddress9,
+    address _adminAddress10,
+    string memory _userIdentifier1,
+    string memory _userIdentifier2,
+    string memory _userIdentifier3
+    )
+    public {
     userAddress = _userAddress;
     adminAddresses[_adminAddress1] = true;
     adminAddresses[_adminAddress2] = true;
     adminAddresses[_adminAddress3] = true;
     adminAddresses[_adminAddress4] = true;
+    adminAddresses[_adminAddress5] = true;
+    adminAddresses[_adminAddress6] = true;
+    adminAddresses[_adminAddress7] = true;
+    adminAddresses[_adminAddress8] = true;
+    adminAddresses[_adminAddress9] = true;
+    adminAddresses[_adminAddress10] = true;
     emit GossamerContractCreation(_userIdentifier1, _userIdentifier2, _userIdentifier3, _userAddress);
   }
 
