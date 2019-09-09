@@ -1,4 +1,4 @@
-pragma solidity ^0.5.8;
+pragma solidity ^0.5.11;
 import { CErc20, CToken, ReentrancyGuard } from "./CERC20.sol";
 import { ERC20Interface } from "./ERC20.sol";
 import "./SafeMath.sol";
@@ -18,7 +18,8 @@ contract GossamerContractWallet is ReentrancyGuard {
   /// @param userIdentifier2 Offchain user identifier
   /// @param userIdentifier3 Offchain user identifier
   /// @param userAddress The wallet address of the user
-  event GossamerContractCreation(string indexed userIdentifier1, string userIdentifier2, string userIdentifier3, address userAddress);
+  /// @param contractVersion The wallet address of the user
+  event GossamerContractCreation(string indexed userIdentifier1, string userIdentifier2, string userIdentifier3, address userAddress, string contractVersion);
 
   /// @notice Logged when a token is approved
   /// @param tokenAddress The address of the token to approve for transfers
@@ -48,48 +49,16 @@ contract GossamerContractWallet is ReentrancyGuard {
   /// @notice The constructor's purpose is to define the user address that will receive funds when the withdrawl function is called as
   /// well as specifiying the admin accounts that have permission to call this contract's functions on the user's behalf
   /// @param _userAddress The user's wallet address
-  /// @param _adminAddress1 The Gossamer admin wallet that will receive user fees and can call this contract's functions
-  /// @param _adminAddress2 The Gossamer admim wallet that can call this contract's functions
-  /// @param _adminAddress3 The Gossamer admim wallet that can call this contract's functions
-  /// @param _adminAddress4 The Gossamer admim wallet that can call this contract's functions
-  /// @param _adminAddress5 The Gossamer admim wallet that can call this contract's functions
-  /// @param _adminAddress6 The Gossamer admim wallet that can call this contract's functions
-  /// @param _adminAddress7 The Gossamer admim wallet that can call this contract's functions
-  /// @param _adminAddress8 The Gossamer admim wallet that can call this contract's functions
-  /// @param _adminAddress9 The Gossamer admim wallet that can call this contract's functions
-  /// @param _adminAddress10 The Gossamer admim wallet that can call this contract's functions
+  /// @param _adminAddressesArr Array of Gossamer admin addresses that are able to call this contract's protected functions on behalf of the user
   /// @param _userIdentifier1 Offchain user identifier
   /// @param _userIdentifier2 Offchain user identifier
   /// @param _userIdentifier3 Offchain user identifier
-  constructor(
-    address _userAddress,
-    address _adminAddress1,
-    address _adminAddress2,
-    address _adminAddress3,
-    address _adminAddress4,
-    address _adminAddress5,
-    address _adminAddress6,
-    address _adminAddress7,
-    address _adminAddress8,
-    address _adminAddress9,
-    address _adminAddress10,
-    string memory _userIdentifier1,
-    string memory _userIdentifier2,
-    string memory _userIdentifier3
-    )
-    public {
+  constructor(address _userAddress, address [] memory _adminAddressesArr, string memory _userIdentifier1, string memory _userIdentifier2, string memory _userIdentifier3, string memory _contractVersion) public {
     userAddress = _userAddress;
-    adminAddresses[_adminAddress1] = true;
-    adminAddresses[_adminAddress2] = true;
-    adminAddresses[_adminAddress3] = true;
-    adminAddresses[_adminAddress4] = true;
-    adminAddresses[_adminAddress5] = true;
-    adminAddresses[_adminAddress6] = true;
-    adminAddresses[_adminAddress7] = true;
-    adminAddresses[_adminAddress8] = true;
-    adminAddresses[_adminAddress9] = true;
-    adminAddresses[_adminAddress10] = true;
-    emit GossamerContractCreation(_userIdentifier1, _userIdentifier2, _userIdentifier3, _userAddress);
+    for (uint i = 0; i < _adminAddressesArr.length; i += 1) {
+      adminAddresses[_adminAddressesArr[i]] = true;
+    }
+    emit GossamerContractCreation(_userIdentifier1, _userIdentifier2, _userIdentifier3, _userAddress, _contractVersion);
   }
 
   /// @notice Modifier that restricts the ability to call functions to just the user and admin addresses
