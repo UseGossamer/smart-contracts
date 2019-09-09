@@ -14,40 +14,47 @@ contract GossamerContractWallet is ReentrancyGuard {
   mapping(address => bool) public adminAddresses;
 
   /// @notice Logged when a contract is created
+  /// @param userAddress The wallet address of the user
   /// @param userIdentifier1 Offchain user identifier
   /// @param userIdentifier2 Offchain user identifier
   /// @param userIdentifier3 Offchain user identifier
-  /// @param userAddress The wallet address of the user
   /// @param contractVersion The wallet address of the user
-  event GossamerContractCreation(string indexed userIdentifier1, string userIdentifier2, string userIdentifier3, address userAddress, string contractVersion);
+  event GossamerContractCreation(address indexed userAddress, string indexed userIdentifier1, string userIdentifier2, string userIdentifier3, string contractVersion);
 
   /// @notice Logged when a token is approved
+  /// @param userAddress The wallet address of the user
   /// @param tokenAddress The address of the token to approve for transfers
-  event GossamerApproval(address tokenAddress);
+  event GossamerApproval(address indexed userAddress, address indexed tokenAddress);
 
   /// @notice Logged when a user deposits to this contract wallet and their deposit is supplied to Compound's money market
+  /// @param userAddress The wallet address of the user
   /// @param amountSuppliedToken The amount of tokens deposited to the contract wallet
   /// @param amountSuppliedCToken The amount of cTokens returned to the contract wallet from the money market
   /// @param tokenAddress The address of the token deposited
-  event GossamerDeposit(uint256 amountSuppliedToken, uint256 amountSuppliedCToken, address tokenAddress);
+  event GossamerDeposit(address indexed userAddress, uint256 amountSuppliedToken, uint256 amountSuppliedCToken, address indexed tokenAddress);
 
   /// @notice Logged when there is a Compound error associated with supplying cTokens
+  /// @param userAddress The wallet address of the user
+  /// @param tokenAddress The address of the token deposited
   /// @param compoundErrorCode The Compound error code that maps to an error message on their developer docs
-  event GossamerDepositError(uint256 compoundErrorCode);
+  event GossamerDepositError(address indexed userAddress, address indexed tokenAddress, uint256 compoundErrorCode);
 
   /// @notice Logged when a user withdraws from Compound's money market and has tokens sent back to their address
+  /// @param userAddress The wallet address of the user
   /// @param amountWithdrawnCToken The amount of cTokens being sent to Compound's money market to be converted to tokens
   /// @param principalWithdrawn The proportion of the withdrawal amount that the user originally deposited as principal
   /// @param interestWithdrawn The amount of tokens the user has earned on the principal being withdrawn
   /// @param tokenAddress The address of the token withdrawn
-  event GossamerWithdrawal(uint256 principalWithdrawn, uint256 interestWithdrawn, uint256 amountWithdrawnCToken, address tokenAddress);
+  event GossamerWithdrawal(address indexed userAddress, uint256 amountWithdrawnCToken, uint256 principalWithdrawn, uint256 interestWithdrawn, address indexed tokenAddress);
 
   /// @notice Logged when there is a Compound error associated with redeeming cTokens
+  /// @param userAddress The wallet address of the user
+  /// @param tokenAddress The address of the token withdrawn
   /// @param compoundErrorCode The Compound error code that maps to an error message on their developer docs
-  event GossamerWithdrawalError(uint256 compoundErrorCode);
+  event GossamerWithdrawalError(address indexed userAddress, address indexed tokenAddress, uint256 compoundErrorCode);
 
-  /// @notice The constructor's purpose is to define the user address that will receive funds when the withdrawl function is called as
-  /// well as specifiying the admin accounts that have permission to call this contract's functions on the user's behalf
+  /// @notice The constructor's purpose is to define the user address that will receive funds when the withdrawal function is called as
+  /// well as specifying the admin accounts that have permission to call this contract's functions on the user's behalf
   /// @param _userAddress The user's wallet address
   /// @param _adminAddressesArr Array of Gossamer admin addresses that are able to call this contract's protected functions on behalf of the user
   /// @param _userIdentifier1 Offchain user identifier
@@ -58,7 +65,7 @@ contract GossamerContractWallet is ReentrancyGuard {
     for (uint i = 0; i < _adminAddressesArr.length; i += 1) {
       adminAddresses[_adminAddressesArr[i]] = true;
     }
-    emit GossamerContractCreation(_userIdentifier1, _userIdentifier2, _userIdentifier3, _userAddress, _contractVersion);
+    emit GossamerContractCreation(_userAddress, _userIdentifier1, _userIdentifier2, _userIdentifier3, _contractVersion);
   }
 
   /// @notice Modifier that restricts the ability to call functions to just the user and admin addresses
@@ -71,14 +78,26 @@ contract GossamerContractWallet is ReentrancyGuard {
   /// -------------- Helper Functions --------------- ///
   /// @notice Getter function for Dai address
   /// @return Dai token address
-  function daiAddress() private pure returns (address) {
-    return 0x89d24A6b4CcB1B6fAA2625fE562bDD9a23260359;
+  function daiAddress() internal pure returns (address) {
+    return 0x5592EC0cfb4dbc12D3aB100b257153436a1f0FEa;
   }
 
   /// @notice Getter function for USDC address
   /// @return USDC token address
-  function usdcAddress() private pure returns (address) {
-    return 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
+  function usdcAddress() internal pure returns (address) {
+    return 0x4DBCdF9B62e891a7cec5A2568C3F4FAF9E8Abe2b;
+  }
+
+  /// @notice Getter function for cDAI address
+  /// @return cDAI token address
+  function cDAIAddress() internal pure returns (address) {
+    return 0xF5DCe57282A584D2746FaF1593d3121Fcac444dC;
+  }
+
+  /// @notice Getter function for cUSDC address
+  /// @return cUSDC token address
+  function cUSDCAddress() internal pure returns (address) {
+    return 0x39AA39c021dfbaE8faC545936693aC917d5E7563;
   }
 
   /// @notice Returns address for the cToken contract corresponding to provided token address (either Dai or USDC)
@@ -86,13 +105,12 @@ contract GossamerContractWallet is ReentrancyGuard {
   /// @return cDAI or cUSDC cToken address
   function getCTokenAddress(address _tokenAddress) private pure returns (address) {
     if (_tokenAddress == daiAddress()) {
-      return 0xF5DCe57282A584D2746FaF1593d3121Fcac444dC;
+      return cDAIAddress();
+    } else if (_tokenAddress == usdcAddress()) {
+      return cUSDCAddress();
+    } else {
+      revert('The token address provided is not supported by Gossamer at this time');
     }
-
-    if (_tokenAddress == usdcAddress()) {
-      return 0x39AA39c021dfbaE8faC545936693aC917d5E7563;
-    }
-    revert('The token address provided is not supported by Gossamer at this time');
   }
 
 
@@ -102,7 +120,7 @@ contract GossamerContractWallet is ReentrancyGuard {
   function approveCTokenContract(address _tokenAddress) external onlyUserAndAdmins {
     address _cTokenAddress = getCTokenAddress(_tokenAddress);
     ERC20Interface(_tokenAddress).approve(_cTokenAddress,  (2 ** 256) - 1);
-    emit GossamerApproval(_tokenAddress);
+    emit GossamerApproval(userAddress, _tokenAddress);
   }
 
   /// @notice Supplies the entirety of this contract's token balance to Compound's money market contracts and adds the amount supplied to the principalHolder in state
@@ -112,11 +130,12 @@ contract GossamerContractWallet is ReentrancyGuard {
     uint256 _tokenBalance = ERC20Interface(_tokenAddress).balanceOf(address(this));
     uint256 _initialCTokenBalance = CErc20(_cTokenAddress).balanceOf(address(this));
     uint256 _mintStatus = CErc20(_cTokenAddress).mint(_tokenBalance);
-    if (_mintStatus != 0) {
-      emit GossamerDepositError(_mintStatus);
+    if (_mintStatus == 0) {
+      emit GossamerDeposit(userAddress, _tokenBalance, CErc20(_cTokenAddress).balanceOf(address(this)).sub(_initialCTokenBalance), _tokenAddress);
+    } else {
+      emit GossamerDepositError(userAddress, _tokenAddress, _mintStatus);
       revert("Error supplying tokens to Compound. See GossamerDepositError event for error code");
     }
-    emit GossamerDeposit(_tokenBalance, CErc20(_cTokenAddress).balanceOf(address(this)).sub(_initialCTokenBalance), _tokenAddress);
   }
 
   /// @notice Withdraws from Compound's money market contracts to this contract, subtracts the amount of principal being withdrawn
@@ -134,14 +153,14 @@ contract GossamerContractWallet is ReentrancyGuard {
     }
 
     uint256 _redeemStatus = CErc20(_cTokenAddress).redeem(_cTokensRequested);
-    if (_redeemStatus != 0) {
-      emit GossamerWithdrawalError(_redeemStatus);
+    if (_redeemStatus == 0) {
+      uint256 _redeemedTokenBalance = ERC20Interface(_tokenAddress).balanceOf(address(this)).sub(_initalTokenBalance);
+      require(ERC20Interface(_tokenAddress).transfer(userAddress, _redeemedTokenBalance), "Error transfering withdrawn tokens to user address");
+      emit GossamerWithdrawal(userAddress, _cTokensRequested, _principal, _interest, _tokenAddress);
+    } else {
+      emit GossamerWithdrawalError(userAddress, _tokenAddress, _redeemStatus);
       revert("Error withdrawing tokens from Compound. See GossamerWithdrawalError event for error code");
     }
-
-    uint256 _redeemedTokenBalance = ERC20Interface(_tokenAddress).balanceOf(address(this)).sub(_initalTokenBalance);
-    require(ERC20Interface(_tokenAddress).transfer(userAddress, _redeemedTokenBalance), "Error transfering withdrawn tokens to user address");
-    emit GossamerWithdrawal(_cTokensRequested, _principal, _interest, _tokenAddress);
   }
 
   /// @notice Allows users to transfer ERC20s sent to this contract on accident back to their wallet. Does not allow cTokens to be withdrawn this way
